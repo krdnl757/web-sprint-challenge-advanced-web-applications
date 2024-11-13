@@ -1,56 +1,89 @@
-import React, { useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
-import PT from 'prop-types'
+import React, { useEffect, useState } from 'react';
+import PT from 'prop-types';
 
-export default function Articles(props) {
-  // Destructure the props
-  const { articles, getArticles, deleteArticle, setCurrentArticleId, currentArticleId } = props;
+const initialFormValues = { title: '', text: '', topic: '' };
 
-  // Check if there's a token in localStorage, if not, redirect to the login page
-  const token = localStorage.getItem('token');
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+export default function ArticleForm(props) {
+  const { postArticle, updateArticle, setCurrentArticleId, currentArticle } = props;
+  const [values, setValues] = useState(initialFormValues);
 
-  // Fetch articles when the component mounts
   useEffect(() => {
-    getArticles();
-  }, [getArticles]);
+    if (currentArticle) {
+      setValues({
+        title: currentArticle.title,
+        text: currentArticle.text,
+        topic: currentArticle.topic,
+      });
+    } else {
+      setValues(initialFormValues); // Reset to initial values when no article is provided
+    }
+  }, [currentArticle]);
+
+  const onChange = evt => {
+    const { id, value } = evt.target;
+    setValues({ ...values, [id]: value });
+  };
+
+  const onSubmit = evt => {
+    evt.preventDefault();
+
+    if (currentArticle) {
+      // Update existing article
+      updateArticle(values);
+    } else {
+      // Post a new article
+      postArticle(values);
+    }
+
+    setValues(initialFormValues);
+    setCurrentArticleId(null); // Optionally reset the current article ID if needed
+  };
+
+  const isDisabled = () => {
+    return !(values.title && values.text && values.topic);
+  };
 
   return (
-    <div className="articles">
-      <h2>Articles</h2>
-      {
-        articles.length === 0
-          ? 'No articles yet'
-          : articles.map(art => (
-            <div className="article" key={art.article_id}>
-              <div>
-                <h3>{art.title}</h3>
-                <p>{art.text}</p>
-                <p>Topic: {art.topic}</p>
-              </div>
-              <div>
-                <button onClick={() => setCurrentArticleId(art.article_id)}>Edit</button>
-                <button onClick={() => deleteArticle(art.article_id)}>Delete</button>
-              </div>
-            </div>
-          ))
-      }
-    </div>
+    <form id="form" onSubmit={onSubmit}>
+      <h2>{currentArticle ? "Edit Article" : "Create Article"}</h2>
+      <input
+        maxLength={50}
+        onChange={onChange}
+        value={values.title}
+        placeholder="Enter title"
+        id="title"
+      />
+      <textarea
+        maxLength={200}
+        onChange={onChange}
+        value={values.text}
+        placeholder="Enter text"
+        id="text"
+      />
+      <select onChange={onChange} id="topic" value={values.topic}>
+        <option value="">-- Select topic --</option>
+        <option value="JavaScript">JavaScript</option>
+        <option value="React">React</option>
+        <option value="Node">Node</option>
+      </select>
+      <div className="button-group">
+        <button disabled={isDisabled()} id="submitArticle">Submit</button>
+        <button type="button" onClick={() => setCurrentArticleId(null)}>Cancel edit</button>
+      </div>
+    </form>
   );
 }
 
-// 🔥 No touchy: Articles expects the following props exactly:
-Articles.propTypes = {
-  articles: PT.arrayOf(PT.shape({
+// 🔥 No touchy: ArticleForm expects the following props exactly:
+ArticleForm.propTypes = {
+  postArticle: PT.func.isRequired,
+  updateArticle: PT.func.isRequired,
+  setCurrentArticleId: PT.func.isRequired,
+  currentArticle: PT.shape({
     article_id: PT.number.isRequired,
     title: PT.string.isRequired,
     text: PT.string.isRequired,
     topic: PT.string.isRequired,
-  })).isRequired,
-  getArticles: PT.func.isRequired,
-  deleteArticle: PT.func.isRequired,
-  setCurrentArticleId: PT.func.isRequired,
-  currentArticleId: PT.number, // can be undefined or null
+  }),
 };
+
