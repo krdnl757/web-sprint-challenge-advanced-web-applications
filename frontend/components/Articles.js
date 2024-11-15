@@ -3,19 +3,14 @@ import { Navigate } from 'react-router-dom'
 import PT from 'prop-types'
 
 export default function Articles(props) {
-  // Destructure the props
-  const { articles, getArticles, deleteArticle, setCurrentArticleId, currentArticleId } = props;
+  // ✨ where are my props? Destructure them here
 
-  // Check if there's a token in localStorage, if not, redirect to the login page
-  const token = localStorage.getItem('token');
-  if (!token) {
-    return <Navigate to="/"/>;
-  }
+  // ✨ implement conditional logic: if no token exists
+  // we should render a Navigate to login screen (React Router v.6)
 
-  // Fetch articles when the component mounts
   useEffect(() => {
-    getArticles();
-  }, []);
+    // ✨ grab the articles here, on first render only
+  })
 
   return (
     <div className="articles">
@@ -23,20 +18,21 @@ export default function Articles(props) {
       {
         articles.length === 0
           ? 'No articles yet'
-          : articles.map(art => {
+          : [].map(art => {
             return (
-            <div className="article" key={art.article_id}>
-              <div>
-                <h3>{art.title}</h3>
-                <p>{art.text}</p>
-                <p>Topic: {art.topic}</p>
+              <div className="article" key={art.article_id}>
+                <div>
+                  <h3>{art.title}</h3>
+                  <p>{art.text}</p>
+                  <p>Topic: {art.topic}</p>
+                </div>
+                <div>
+                  <button disabled={true} onClick={Function.prototype}>Edit</button>
+                  <button disabled={true} onClick={Function.prototype}>Delete</button>
+                </div>
               </div>
-              <div>
-                <button onClick={() => setCurrentArticleId(art.article_id)}>Edit</button>
-                <button onClick={() => deleteArticle(art.article_id)}>Delete</button>
-              </div>
-            </div>
-          )})
+            )
+          })
       }
     </div>
   );

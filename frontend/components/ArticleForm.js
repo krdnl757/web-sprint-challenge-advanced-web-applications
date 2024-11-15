@@ -86,3 +86,7 @@ ArticleForm.propTypes = {
     topic: PT.string.isRequired,
   }),
 };
+<<<<<<< HEAD
+=======
+
+>>>>>>> 83db778ceda2d6245f295af9e6dae6d5b3ee9bb3

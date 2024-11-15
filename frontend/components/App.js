@@ -202,8 +202,8 @@ export default function App() {
 
   return (
     <>
-      <Spinner on={spinnerOn} />
-      <Message message={message} />
+      <Spinner />
+      <Message />
       <button id="logout" onClick={logout}>Logout from app</button>
       <div id="wrapper" style={{ opacity: spinnerOn ? "0.25" : "1" }}>
         <h1>Advanced Web Applications</h1>
@@ -215,8 +215,8 @@ export default function App() {
           <Route path="/" element={<LoginForm login={login} />} />
           <Route path="articles" element={
             <>
-              <ArticleForm postArticle={postArticle} updateArticle={updateArticle} currentArticleId={currentArticleId} setCurrentArticleId={setCurrentArticleId} />
-              <Articles articles={articles} getArticles={getArticles} deleteArticle={deleteArticle} setCurrentArticleId={setCurrentArticleId} />
+              <ArticleForm />
+              <Articles />
             </>
           } />
         </Routes>
