@@ -5,207 +5,80 @@ import LoginForm from './LoginForm'
 import Message from './Message'
 import ArticleForm from './ArticleForm'
 import Spinner from './Spinner'
+import { axiosWithAuth } from '../helpers/axiosWithAuth'
 
 const articlesUrl = 'http://localhost:9000/api/articles'
 const loginUrl = 'http://localhost:9000/api/login'
 
 export default function App() {
+  // ✨ MVP can be achieved with these states
   const [message, setMessage] = useState('')
   const [articles, setArticles] = useState([])
   const [currentArticleId, setCurrentArticleId] = useState()
   const [spinnerOn, setSpinnerOn] = useState(false)
 
+  // ✨ Research `useNavigate` in React Router v.6
   const navigate = useNavigate()
-
-  const redirectToLogin = () => {
-    navigate('/')
-  }
-
-  const redirectToArticles = () => {
-    navigate('/articles')
-  }
+  const redirectToLogin = () => { navigate('/') }
+  const redirectToArticles = () => { navigate('/articles') }
 
   const logout = () => {
-    // Remove the token from localStorage
-    localStorage.removeItem('token')
-    setMessage('Goodbye!')
-    redirectToLogin() // Redirect to login screen
+    localStorage.clear();
+    redirectToLogin();
+    setMessage("Goodbye!")
   }
 
   const login = async ({ username, password }) => {
-    setMessage('')
-    setSpinnerOn(true)
-
-    try {
-      const response = await fetch(loginUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        // Store the token
-        localStorage.setItem('token', data.token)
-        setMessage('Login successful!')
-        redirectToArticles() // Redirect to articles screen
-      } else {
-        setMessage(data.message || 'Login failed. Please try again.')
-      }
-    } catch (error) {
-      setMessage('Error: ' + error.message)
-    } finally {
-      setSpinnerOn(false)
-    }
+    setSpinnerOn(true);
+    const {data} = await axiosWithAuth().post(loginUrl, {username, password});
+    setMessage(data.message);
+    localStorage.setItem('token', data.token);
+    redirectToArticles()
   }
 
   const getArticles = async () => {
-    setMessage('')
-    setSpinnerOn(true)
-
-    try {
-      const token = localStorage.getItem('token')
-
-      if (!token) {
-        redirectToLogin()
-        return
-      }
-
-      const response = await fetch(articlesUrl, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setArticles(data.articles)
-        setMessage('Articles loaded successfully.')
-      } else if (response.status === 401) {
-        // Token may be invalid, redirect to login
-        setMessage('Session expired. Please log in again.')
-        redirectToLogin()
-      } else {
-        setMessage('Failed to load articles.')
-      }
-    } catch (error) {
-      setMessage('Error: ' + error.message)
-    } finally {
-      setSpinnerOn(false)
-    }
+    setSpinnerOn(true);
+    const { data } = await axiosWithAuth().get(articlesUrl);
+    setArticles(data.articles);
+    setMessage(data.message);
+    setSpinnerOn(false);
   }
 
-  const postArticle = async (article) => {
-    setMessage('')
-    setSpinnerOn(true)
-
-    try {
-      const token = localStorage.getItem('token')
-
-      if (!token) {
-        redirectToLogin()
-        return
-      }
-
-      const response = await fetch(articlesUrl, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(article),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setArticles([...articles, data.article]) // Add new article to state
-        setMessage('Article created successfully.')
-      } else {
-        setMessage(data.message || 'Failed to create article.')
-      }
-    } catch (error) {
-      setMessage('Error: ' + error.message)
-    } finally {
-      setSpinnerOn(false)
-    }
+  const postArticle = async article => {
+    setSpinnerOn(true);
+    const { data } = await axiosWithAuth().post(articlesUrl, article);
+    setMessage(data.message);
+    setArticles([...articles, data.article]);
+    setSpinnerOn(false);
   }
 
   const updateArticle = async ({ article_id, article }) => {
-    setMessage('')
-    setSpinnerOn(true)
-
-    try {
-      const token = localStorage.getItem('token')
-
-      if (!token) {
-        redirectToLogin()
-        return
-      }
-
-      const response = await fetch(`${articlesUrl}/${article_id}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(article),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setArticles(articles.map(art => art.article_id === article_id ? data.article : art))
-        setMessage('Article updated successfully.')
-      } else {
-        setMessage(data.message || 'Failed to update article.')
-      }
-    } catch (error) {
-      setMessage('Error: ' + error.message)
-    } finally {
-      setSpinnerOn(false)
-    }
+    setSpinnerOn(true);
+    const { data } = await axiosWithAuth().put(`${articlesUrl}/${article_id}`, article);
+    setMessage(data.message);
+    const copy = [...articles];
+    const indexOfArticle = copy.findIndex(art => art.article_id === article_id);
+    copy[indexOfArticle] = data.article;
+    setArticles(copy);
+    setCurrentArticleId(null);
+    setSpinnerOn(false);
   }
 
-  const deleteArticle = async (article_id) => {
-    setMessage('')
-    setSpinnerOn(true)
-
-    try {
-      const token = localStorage.getItem('token')
-
-      if (!token) {
-        redirectToLogin()
-        return
-      }
-
-      const response = await fetch(`${articlesUrl}/${article_id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setArticles(articles.filter(art => art.article_id !== article_id))
-        setMessage('Article deleted successfully.')
-      } else {
-        setMessage(data.message || 'Failed to delete article.')
-      }
-    } catch (error) {
-      setMessage('Error: ' + error.message)
-    } finally {
-      setSpinnerOn(false)
-    }
+  const deleteArticle = async article_id => {
+    setSpinnerOn(true);
+    const { data } = await axiosWithAuth().delete(`${articlesUrl}/${article_id}`);
+    setMessage(data.message);
+    setArticles(articles.filter(art => art.article_id !== article_id))
+    setSpinnerOn(false);
   }
 
   return (
+    // ✨ fix the JSX: `Spinner`, `Message`, `LoginForm`, `ArticleForm` and `Articles` expect props ❗
     <>
-      <Spinner />
-      <Message />
+      <Spinner on={spinnerOn} />
+      <Message message={message} />
       <button id="logout" onClick={logout}>Logout from app</button>
-      <div id="wrapper" style={{ opacity: spinnerOn ? "0.25" : "1" }}>
+      <div id="wrapper" style={{ opacity: spinnerOn ? "0.25" : "1" }}> {/* <-- do not change this line */}
         <h1>Advanced Web Applications</h1>
         <nav>
           <NavLink id="loginScreen" to="/">Login</NavLink>
@@ -215,8 +88,8 @@ export default function App() {
           <Route path="/" element={<LoginForm login={login} />} />
           <Route path="articles" element={
             <>
-              <ArticleForm />
-              <Articles />
+              <ArticleForm spinnerOn={spinnerOn} articles={articles} setCurrentArticleId={setCurrentArticleId} currentArticle={articles.find(art => art.article_id === currentArticleId)} postArticle={postArticle} updateArticle={updateArticle} />
+              <Articles currentArticleId={currentArticleId} setCurrentArticleId={setCurrentArticleId} deleteArticle={deleteArticle} getArticles={getArticles} articles={articles} redirectToLogin={redirectToLogin} />
             </>
           } />
         </Routes>

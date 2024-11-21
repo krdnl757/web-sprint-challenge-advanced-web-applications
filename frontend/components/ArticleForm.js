@@ -1,51 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import PT from 'prop-types';
+import React, { useEffect, useState } from 'react'
+import PT from 'prop-types'
 
-const initialFormValues = { title: '', text: '', topic: '' };
+const initialFormValues = { title: '', text: '', topic: '' }
 
 export default function ArticleForm(props) {
-  const { postArticle, updateArticle, setCurrentArticleId, currentArticle } = props;
-  const [values, setValues] = useState(initialFormValues);
+  const [values, setValues] = useState(initialFormValues)
+  const {currentArticle, postArticle, updateArticle, setCurrentArticleId} = props;
 
   useEffect(() => {
-    if (currentArticle) {
-      setValues({
-        title: currentArticle.title,
-        text: currentArticle.text,
-        topic: currentArticle.topic,
-      });
-    } else {
-      setValues(initialFormValues); // Reset to initial values when no article is provided
-    }
-  }, [currentArticle]);
+    if (currentArticle) setValues(currentArticle);
+    else setValues(initialFormValues);
+  }, [currentArticle])
 
   const onChange = evt => {
-    const { id, value } = evt.target;
-    setValues({ ...values, [id]: value });
-  };
-
-  const onSubmit = evt => {
-    evt.preventDefault();
-
-    if (currentArticle) {
-      // Update existing article
-      updateArticle(values);
-    } else {
-      // Post a new article
-      postArticle(values);
-    }
-
-    setValues(initialFormValues);
-    setCurrentArticleId(null); // Optionally reset the current article ID if needed
-  };
+    const { id, value } = evt.target
+    setValues({ ...values, [id]: value })
+  }
 
   const isDisabled = () => {
-    return !(values.title && values.text && values.topic);
-  };
+    return values.text.trim().length <= 1;
+  }
+
+  const onSubmit = evt => {
+    evt.preventDefault()
+    if (!currentArticle) {
+      postArticle(values);
+      setValues(initialFormValues);
+    } else {
+      updateArticle({article_id: currentArticle.article_id, article: values})
+      setValues(initialFormValues);
+    }
+  }
 
   return (
+    // ✨ fix the JSX: make the heading display either "Edit" or "Create"
+    // and replace Function.prototype with the correct function
     <form id="form" onSubmit={onSubmit}>
-      <h2>{currentArticle ? "Edit Article" : "Create Article"}</h2>
+      <h2>Create Article</h2>
       <input
         maxLength={50}
         onChange={onChange}
@@ -68,10 +59,10 @@ export default function ArticleForm(props) {
       </select>
       <div className="button-group">
         <button disabled={isDisabled()} id="submitArticle">Submit</button>
-        <button type="button" onClick={() => setCurrentArticleId(null)}>Cancel edit</button>
+        {currentArticle && <button type="button" onClick={() => setCurrentArticleId(null)}>Cancel edit</button>}
       </div>
     </form>
-  );
+  )
 }
 
 // 🔥 No touchy: ArticleForm expects the following props exactly:
@@ -79,14 +70,10 @@ ArticleForm.propTypes = {
   postArticle: PT.func.isRequired,
   updateArticle: PT.func.isRequired,
   setCurrentArticleId: PT.func.isRequired,
-  currentArticle: PT.shape({
+  currentArticle: PT.shape({ // can be null or undefined, meaning "create" mode (as opposed to "update")
     article_id: PT.number.isRequired,
     title: PT.string.isRequired,
     text: PT.string.isRequired,
     topic: PT.string.isRequired,
-  }),
-};
-<<<<<<< HEAD
-=======
-
->>>>>>> 83db778ceda2d6245f295af9e6dae6d5b3ee9bb3
+  })
+}

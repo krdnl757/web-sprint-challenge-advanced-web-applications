@@ -5,10 +5,10 @@ const initialFormValues = {
   username: '',
   password: '',
 }
-
 export default function LoginForm(props) {
-  const { login } = props // Destructure the login function from props
   const [values, setValues] = useState(initialFormValues)
+  // ✨ where are my props? Destructure them here
+  const {login} = props;
 
   const onChange = evt => {
     const { id, value } = evt.target
@@ -17,12 +17,10 @@ export default function LoginForm(props) {
 
   const onSubmit = evt => {
     evt.preventDefault()
-    // Call the login function passed as a prop, passing the username and password
-    login(values)
+    login(values);
   }
 
   const isDisabled = () => {
-    // Ensure the username is at least 3 characters long and the password is at least 8 characters long
     return values.username.trim().length < 3 || values.password.trim().length < 8
   }
 
@@ -37,7 +35,6 @@ export default function LoginForm(props) {
         id="username"
       />
       <input
-        type="password"
         maxLength={20}
         value={values.password}
         onChange={onChange}

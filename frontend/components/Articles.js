@@ -1,24 +1,27 @@
 import React, { useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
 import PT from 'prop-types'
 
 export default function Articles(props) {
   // ✨ where are my props? Destructure them here
+  const {articles, redirectToLogin, getArticles, deleteArticle, setCurrentArticleId, currentArticleId} = props;
 
   // ✨ implement conditional logic: if no token exists
   // we should render a Navigate to login screen (React Router v.6)
 
   useEffect(() => {
-    // ✨ grab the articles here, on first render only
-  })
+    if (!localStorage.getItem('token')) redirectToLogin();
+    else getArticles();
+  }, [])
 
   return (
+    // ✨ fix the JSX: replace `Function.prototype` with actual functions
+    // and use the articles prop to generate articles
     <div className="articles">
       <h2>Articles</h2>
       {
-        articles.length === 0
+        !articles.length
           ? 'No articles yet'
-          : [].map(art => {
+          : articles.map(art => {
             return (
               <div className="article" key={art.article_id}>
                 <div>
@@ -27,20 +30,20 @@ export default function Articles(props) {
                   <p>Topic: {art.topic}</p>
                 </div>
                 <div>
-                  <button disabled={true} onClick={Function.prototype}>Edit</button>
-                  <button disabled={true} onClick={Function.prototype}>Delete</button>
+                  <button disabled={currentArticleId} onClick={() => setCurrentArticleId(art.article_id)}>Edit</button>
+                  <button disabled={currentArticleId} onClick={() => deleteArticle(art.article_id)}>Delete</button>
                 </div>
               </div>
             )
           })
       }
     </div>
-  );
+  )
 }
 
 // 🔥 No touchy: Articles expects the following props exactly:
 Articles.propTypes = {
-  articles: PT.arrayOf(PT.shape({
+  articles: PT.arrayOf(PT.shape({ // the array can be empty
     article_id: PT.number.isRequired,
     title: PT.string.isRequired,
     text: PT.string.isRequired,
@@ -50,4 +53,4 @@ Articles.propTypes = {
   deleteArticle: PT.func.isRequired,
   setCurrentArticleId: PT.func.isRequired,
   currentArticleId: PT.number, // can be undefined or null
-};
+}
